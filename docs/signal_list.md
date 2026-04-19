@@ -1,1 +1,196 @@
-# Fake BMS Demo – Signal List v1.0## 1. PurposeThis document defines the minimal signal set for the Fake BMS–VCU integration demo.The objective is to simulate a compact communication chain in which a fake Battery Management System (BMS) periodically transmits battery status, and a fake Vehicle Control Unit (VCU) receives, interprets, and converts these signals into vehicle-side logic states such as charging lockout, fault lockout, and drive enable status.This signal list is intentionally minimal. It does not attempt to reproduce a full production vehicle network. Instead, it establishes a small but coherent signal model that is sufficient for software-based CAN communication simulation and state-machine validation.---## 2. Node Definitions### 2.1 Fake_BMSThe Fake_BMS node simulates a battery management system and periodically transmits battery-related states.### 2.2 Fake_VCUThe Fake_VCU node receives BMS states, evaluates interlock conditions, and derives vehicle-side operational states.### 2.3 Monitor_Tool (optional)An optional monitoring node may be used for serial output, logging, or visualization.---## 3. Signal GroupsThe signal set is divided into three groups:1. **BMS transmitted signals**     Signals sent from Fake_BMS to Fake_VCU.2. **VCU local input signals**     Signals that originate locally on the Fake_VCU side.3. **VCU derived state signals**     Signals derived from logic evaluation inside the Fake_VCU.---## 4. BMS Transmitted Signals### 4.1 BMS_SOC- **Type:** uint8- **Range:** 0 to 100- **Unit:** %- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Battery state of charge.### 4.2 BMS_Temp_Max- **Type:** int16- **Range:** -400 to 1200- **Unit:** 0.1 °C- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Maximum battery temperature represented with a scaling factor of 0.1 °C.### 4.3 BMS_ChargerPlugged- **Type:** bool- **Range:** 0 / 1- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Indicates whether a charger is physically connected.### 4.4 BMS_ChargeActive- **Type:** bool- **Range:** 0 / 1- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Indicates whether charging is currently active.### 4.5 BMS_Fault- **Type:** bool- **Range:** 0 / 1- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Indicates that a BMS-level fault is active.### 4.6 BMS_Warning- **Type:** bool- **Range:** 0 / 1- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Indicates a warning condition which is less severe than a fault.### 4.7 BMS_AliveCounter- **Type:** uint8- **Range:** 0 to 255- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Rolling counter incremented in each transmitted BMS message for basic communication supervision.### 4.8 BMS_Checksum- **Type:** uint8- **Range:** 0 to 255- **Direction:** Fake_BMS -> Fake_VCU- **Description:** Simple checksum byte for software-level message validation.---## 5. VCU Local Input Signals### 5.1 VCU_StartCmd- **Type:** bool- **Range:** 0 / 1- **Direction:** Local input- **Description:** Start request on the vehicle side.### 5.2 VCU_DriveDir- **Type:** uint8- **Range:** 0 / 1 / 2- **Direction:** Local input- **Description:** Requested drive direction.- **Encoding:**  - 0 = Stop  - 1 = Forward  - 2 = Reverse### 5.3 VCU_EStop- **Type:** bool- **Range:** 0 / 1- **Direction:** Local input- **Description:** Emergency stop input.---## 6. VCU Derived State Signals### 6.1 VCU_DriveEnable- **Type:** bool- **Range:** 0 / 1- **Direction:** Internal derived state / optional transmitted status- **Description:** Final permission for vehicle drive operation.### 6.2 VCU_ChargingMode- **Type:** bool- **Range:** 0 / 1- **Direction:** Internal derived state / optional transmitted status- **Description:** Indicates that the vehicle is in charging-related lockout mode.### 6.3 VCU_FaultLatched- **Type:** bool- **Range:** 0 / 1- **Direction:** Internal derived state / optional transmitted status- **Description:** Latched fault state if fault memory is used in later project versions.### 6.4 VCU_DisplayState- **Type:** uint8- **Range:** 0 to 255- **Direction:** Internal derived state / optional transmitted status- **Description:** Encoded state for HMI or serial output.- **Encoding:**  - 0 = Startup  - 1 = Ready  - 2 = Drive_Enabled  - 3 = Charging  - 4 = Fault  - 5 = EStop  - 6 = Communication_Lost### 6.5 VCU_CommTimeout- **Type:** bool- **Range:** 0 / 1- **Direction:** Internal derived state- **Description:** Indicates that BMS communication supervision has timed out.---## 7. Core Interlock LogicThe minimal interlock logic is defined as follows:- If `BMS_Fault = 1`, then `VCU_DriveEnable = 0`- If `VCU_EStop = 1`, then `VCU_DriveEnable = 0`- If `BMS_ChargerPlugged = 1` or `BMS_ChargeActive = 1`, then `VCU_DriveEnable = 0`- If BMS communication is lost, then `VCU_DriveEnable = 0`- Only when none of the above conditions are active may the VCU enter a drive-enabled state---## 8. Scope BoundaryThis signal list is limited to the first software prototype version.The following aspects are intentionally excluded at this stage:- real hardware I/O mapping- physical CAN transceivers- diagnostic services- complete DBC implementation- production-grade fault memory- contactor control- detailed battery measurements such as cell voltages and pack currentThese may be introduced in later versions if the prototype is extended to hardware validation.---## 9. Revision- **Version:** v1.0- **Status:** Initial definition
+# Fake BMS Demo – Signal List v1.0
+
+## 1. Purpose
+
+This document defines the minimal signal set for the Fake BMS–VCU integration demo.
+
+The objective is to simulate a compact communication chain in which a fake Battery Management System (BMS) periodically transmits battery status, and a fake Vehicle Control Unit (VCU) receives, interprets, and converts these signals into vehicle-side logic states such as charging lockout, fault lockout, and drive enable status.
+
+This signal list is intentionally minimal. It does not attempt to reproduce a full production vehicle network. Instead, it establishes a small but coherent signal model that is sufficient for software-based CAN communication simulation and state-machine validation.
+
+---
+
+## 2. Node Definitions
+
+### 2.1 Fake_BMS
+The Fake_BMS node simulates a battery management system and periodically transmits battery-related states.
+
+### 2.2 Fake_VCU
+The Fake_VCU node receives BMS states, evaluates interlock conditions, and derives vehicle-side operational states.
+
+### 2.3 Monitor_Tool (optional)
+An optional monitoring node may be used for serial output, logging, or visualization.
+
+---
+
+## 3. Signal Groups
+
+The signal set is divided into three groups:
+
+1. **BMS transmitted signals**  
+   Signals sent from Fake_BMS to Fake_VCU.
+
+2. **VCU local input signals**  
+   Signals that originate locally on the Fake_VCU side.
+
+3. **VCU derived state signals**  
+   Signals derived from logic evaluation inside the Fake_VCU.
+
+---
+
+## 4. BMS Transmitted Signals
+
+### 4.1 BMS_SOC
+- **Type:** uint8
+- **Range:** 0 to 100
+- **Unit:** %
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Battery state of charge.
+
+### 4.2 BMS_Temp_Max
+- **Type:** int16
+- **Range:** -400 to 1200
+- **Unit:** 0.1 °C
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Maximum battery temperature represented with a scaling factor of 0.1 °C.
+
+### 4.3 BMS_ChargerPlugged
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Indicates whether a charger is physically connected.
+
+### 4.4 BMS_ChargeActive
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Indicates whether charging is currently active.
+
+### 4.5 BMS_Fault
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Indicates that a BMS-level fault is active.
+
+### 4.6 BMS_Warning
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Indicates a warning condition which is less severe than a fault.
+
+### 4.7 BMS_AliveCounter
+- **Type:** uint8
+- **Range:** 0 to 255
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Rolling counter incremented in each transmitted BMS message for basic communication supervision.
+
+### 4.8 BMS_Checksum
+- **Type:** uint8
+- **Range:** 0 to 255
+- **Direction:** Fake_BMS -> Fake_VCU
+- **Description:** Simple checksum byte for software-level message validation.
+
+---
+
+## 5. VCU Local Input Signals
+
+### 5.1 VCU_StartCmd
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Local input
+- **Description:** Start request on the vehicle side.
+
+### 5.2 VCU_DriveDir
+- **Type:** uint8
+- **Range:** 0 / 1 / 2
+- **Direction:** Local input
+- **Description:** Requested drive direction.
+- **Encoding:**
+  - 0 = Stop
+  - 1 = Forward
+  - 2 = Reverse
+
+### 5.3 VCU_EStop
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Local input
+- **Description:** Emergency stop input.
+
+---
+
+## 6. VCU Derived State Signals
+
+### 6.1 VCU_DriveEnable
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Internal derived state / optional transmitted status
+- **Description:** Final permission for vehicle drive operation.
+
+### 6.2 VCU_ChargingMode
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Internal derived state / optional transmitted status
+- **Description:** Indicates that the vehicle is in charging-related lockout mode.
+
+### 6.3 VCU_FaultLatched
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Internal derived state / optional transmitted status
+- **Description:** Latched fault state if fault memory is used in later project versions.
+
+### 6.4 VCU_DisplayState
+- **Type:** uint8
+- **Range:** 0 to 255
+- **Direction:** Internal derived state / optional transmitted status
+- **Description:** Encoded state for HMI or serial output.
+- **Encoding:**
+  - 0 = Startup
+  - 1 = Ready
+  - 2 = Drive_Enabled
+  - 3 = Charging
+  - 4 = Fault
+  - 5 = EStop
+  - 6 = Communication_Lost
+
+### 6.5 VCU_CommTimeout
+- **Type:** bool
+- **Range:** 0 / 1
+- **Direction:** Internal derived state
+- **Description:** Indicates that BMS communication supervision has timed out.
+
+---
+
+## 7. Core Interlock Logic
+
+The minimal interlock logic is defined as follows:
+
+- If `BMS_Fault = 1`, then `VCU_DriveEnable = 0`
+- If `VCU_EStop = 1`, then `VCU_DriveEnable = 0`
+- If `BMS_ChargerPlugged = 1` or `BMS_ChargeActive = 1`, then `VCU_DriveEnable = 0`
+- If BMS communication is lost, then `VCU_DriveEnable = 0`
+- Only when none of the above conditions are active may the VCU enter a drive-enabled state
+
+---
+
+## 8. Scope Boundary
+
+This signal list is limited to the first software prototype version.
+
+The following aspects are intentionally excluded at this stage:
+
+- real hardware I/O mapping
+- physical CAN transceivers
+- diagnostic services
+- complete DBC implementation
+- production-grade fault memory
+- contactor control
+- detailed battery measurements such as cell voltages and pack current
+
+These may be introduced in later versions if the prototype is extended to hardware validation.
+
+---
+
+## 9. Revision
+
+- **Version:** v1.0
+- **Status:** Initial definition
