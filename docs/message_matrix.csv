@@ -1,0 +1,18 @@
+MessageName,CAN_ID,Sender,Receiver,CycleTime_ms,DLC,SignalName,StartByte,StartBit,Length_bits,Type,Scale,Offset,Unit,ValueRange,Description
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_SOC,0,0,8,uint8,1,0,%,0..100,Battery state of charge
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_Temp_Max,1,0,16,int16,0.1,0,degC,-40.0..120.0,Maximum battery temperature
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_ChargerPlugged,3,0,1,bool,1,0,,0/1,Charger physically connected
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_ChargeActive,3,1,1,bool,1,0,,0/1,Charging currently active
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_Fault,3,2,1,bool,1,0,,0/1,BMS fault active
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_Warning,3,3,1,bool,1,0,,0/1,BMS warning active
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_AliveCounter,4,0,8,uint8,1,0,,0..255,Rolling alive counter
+BMS_Status_1,0x180,Fake_BMS,Fake_VCU,100,8,BMS_Checksum,5,0,8,uint8,1,0,,0..255,Simple checksum
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_StartCmd,0,0,1,bool,1,0,,0/1,Vehicle start request
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_EStop,0,1,1,bool,1,0,,0/1,Emergency stop input
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_DriveDir,1,0,8,uint8,1,0,,0/1/2,0=Stop 1=Forward 2=Reverse
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_DriveEnable,2,0,1,bool,1,0,,0/1,Final drive enable
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_ChargingMode,2,1,1,bool,1,0,,0/1,Charging lockout active
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_FaultLatched,2,2,1,bool,1,0,,0/1,Latched fault status
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_DisplayState,3,0,8,uint8,1,0,,0..6,0=Startup 1=Ready 2=Drive_Enabled 3=Charging 4=Fault 5=EStop 6=Communication_Lost
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_AliveCounter,4,0,8,uint8,1,0,,0..255,Rolling alive counter
+VCU_Status_1,0x280,Fake_VCU,Monitor_Tool,100,8,VCU_Checksum,5,0,8,uint8,1,0,,0..255,Simple checksum
